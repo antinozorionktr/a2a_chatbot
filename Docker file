@@ -1,32 +1,7 @@
-# Use official Python 3.13 slim image
-FROM python:3.13-slim
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y build-essential
-
-# Copy application files
-COPY . /app
-
-# Install Python dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-
-# Expose backend and frontend ports
-EXPOSE 9998 9999 8501
-
-# Start backend, sleep, then frontend
 CMD bash -c "\
     set -a && source .env && set +a && \
-    echo '🚀 Starting backend agents...' && \
-    python multi_agent.py both & \
-    echo '⏳ Sleeping for 15 seconds to let backend start...' && \
+    python -u multi_agent.py both > backend.log 2>&1 & \
+    echo '🕒 Waiting for backend...' && \
     sleep 15 && \
-    echo '✅ Launching Streamlit frontend...' && \
+    echo '🚀 Starting frontend...' && \
     streamlit run frontend.py --server.port=8501 --server.address=0.0.0.0"
