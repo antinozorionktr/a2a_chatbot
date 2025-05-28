@@ -1,4 +1,4 @@
-# Use the official Python 3.13 image (update tag as needed)
+# Use the official Python 3.13 image
 FROM python:3.13-slim
 
 # Set environment variables
@@ -9,9 +9,9 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y build-essential curl
 
-# Copy project files including .env
+# Copy project files (including .env)
 COPY . /app
 
 # Install Python dependencies
@@ -21,9 +21,14 @@ RUN pip install -r requirements.txt
 # Expose backend and frontend ports
 EXPOSE 9998 9999 8501
 
-# Set entrypoint to run backend and frontend using .env
+# Entrypoint: start backend, wait for health, then launch frontend
 CMD bash -c "\
     set -a && source .env && set +a && \
     python multi_agent.py both & \
-    sleep 5 && \
+    echo '🩺 Waiting for backend to become healthy...' && \
+    until curl -s http://localhost:9998/health > /dev/null && curl -s http://localhost:9999/health > /dev/null; do \
+        echo '⏳ Waiting for backend services...'; \
+        sleep 2; \
+    done && \
+    echo '✅ Backend is healthy. Launching frontend...' && \
     streamlit run frontend.py --server.port=8501 --server.address=0.0.0.0"
