@@ -1,7 +1,7 @@
 # Use official Python 3.13 slim image
 FROM python:3.13-slim
 
-# Environment settings
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
@@ -9,27 +9,24 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y build-essential curl jq
+RUN apt-get update && apt-get install -y build-essential
 
-# Copy application code (including .env and requirements)
+# Copy application files
 COPY . /app
 
-# Install Python packages
+# Install Python dependencies
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Expose backend and frontend ports
 EXPOSE 9998 9999 8501
 
-# Entrypoint logic
+# Start backend, sleep, then frontend
 CMD bash -c "\
     set -a && source .env && set +a && \
     echo '🚀 Starting backend agents...' && \
     python multi_agent.py both & \
-    echo '⏳ Waiting for agents to become healthy...' && \
-    until curl -s http://localhost:9998/health | jq -e '.status == \"ok\"' > /dev/null && \
-          curl -s http://localhost:9999/health | jq -e '.status == \"ok\"' > /dev/null; do \
-        echo '🔄 Still waiting for agents...'; sleep 2; \
-    done && \
-    echo '✅ Backend is healthy. Launching Streamlit frontend...' && \
+    echo '⏳ Sleeping for 15 seconds to let backend start...' && \
+    sleep 15 && \
+    echo '✅ Launching Streamlit frontend...' && \
     streamlit run frontend.py --server.port=8501 --server.address=0.0.0.0"
