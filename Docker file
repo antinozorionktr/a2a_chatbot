@@ -1,32 +1,29 @@
-# Use the official Python 3.13 image (experimental tag may be needed)
+# Use the official Python 3.13 image (update tag as needed)
 FROM python:3.13-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Set work directory
+# Set working directory
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y build-essential
 
-# Copy project files
+# Copy project files including .env
 COPY . /app
 
 # Install Python dependencies
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# Expose backend ports
-EXPOSE 9998 9999
+# Expose backend and frontend ports
+EXPOSE 9998 9999 8501
 
-# Expose frontend port
-EXPOSE 8501
-
-# Entry command to start backend agents and Streamlit frontend
+# Set entrypoint to run backend and frontend using .env
 CMD bash -c "\
-    export OPENAI_API_KEY=${OPENAI_API_KEY} && \
-    python3 multi_agent.py both & \
+    set -a && source .env && set +a && \
+    python multi_agent.py both & \
     sleep 5 && \
     streamlit run frontend.py --server.port=8501 --server.address=0.0.0.0"
