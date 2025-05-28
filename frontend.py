@@ -53,8 +53,8 @@ class AgentClient:
     """Client to communicate with the simplified HTTP API agents"""
     
     def __init__(self):
-        self.doctor_agent_url = "http://localhost:9998"
-        self.booking_agent_url = "http://localhost:9999"
+        self.doctor_agent_url = "http://35.91.66.200:9998"
+        self.booking_agent_url = "http://35.91.66.200:9999"
         self.session = requests.Session()
         self.session.timeout = 30
     
